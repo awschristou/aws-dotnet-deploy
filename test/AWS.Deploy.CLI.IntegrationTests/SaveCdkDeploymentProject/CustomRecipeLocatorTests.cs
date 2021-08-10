@@ -68,7 +68,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             return new CustomRecipeLocator(deploymentManifestEngine, consoleOrchestratorLogger, commandLineWrapper, _directoryManager);
         }
 
-        [Fact(Skip = "")]
+        [Fact(Skip = "hello")]
         public async Task LocateCustomRecipePathsWithManifestFile()
         {
             var customRecipeLocator = await BuildCustomRecipeLocator();
@@ -88,7 +88,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             CleanUp();
         }
 
-        [Fact(Skip = "")]
+        [Fact(Skip = "hello")]
         public async Task LocateCustomRecipePathsWithoutManifestFile()
         {
             var customRecipeLocator = await BuildCustomRecipeLocator();

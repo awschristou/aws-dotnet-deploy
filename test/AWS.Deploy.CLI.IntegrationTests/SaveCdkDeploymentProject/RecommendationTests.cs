@@ -41,7 +41,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             _testArtifactsDirectoryPath = Path.Combine(testAppsDirectoryPath, "TestArtifacts");
         }
 
-        [Fact(Skip = "")]
+        [Fact(Skip = "hello")]
         public async Task GenerateRecommendationsWithoutCustomRecipes()
         {
             // ARRANGE
@@ -59,7 +59,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             CleanUp();
         }
 
-        [Fact(Skip = "")]
+        [Fact(Skip = "hello")]
         public async Task GenerateRecommendationsFromCustomRecipesWithManifestFile()
         {
             // ARRANGE
@@ -105,7 +105,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             CleanUp();
         }
 
-        [Fact(Skip = "")]
+        [Fact(Skip = "hello")]
         public async Task GenerateRecommendationsFromCustomRecipesWithoutManifestFile()
         {
             // ARRANGE
@@ -150,7 +150,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             CleanUp();
         }
 
-        [Fact(Skip = "")]
+        [Fact(Skip = "hello")]
         public async Task GenerateRecommendationsFromCompatibleDeploymentProject()
         {
             // ARRANGE
@@ -176,7 +176,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             CleanUp();
         }
 
-        [Fact(Skip = "")]
+        [Fact(Skip = "hello")]
         public async Task GenerateRecommendationsFromIncompatibleDeploymentProject()
         {
             // ARRANGE
