@@ -5,12 +5,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using AWS.Deploy.Common.DeploymentManifest;
 using AWS.Deploy.Common.IO;
 using Newtonsoft.Json;
 using Xunit;
 using Should;
 using AWS.Deploy.CLI.Common.UnitTests.IO;
+using AWS.Deploy.Orchestration.DeploymentManifest;
+using AWS.Deploy.Common;
+using Moq;
+using AWS.Deploy.Orchestration;
+using AWS.Deploy.Common.DeploymentManifest;
+using Amazon.Runtime;
 
 namespace AWS.Deploy.CLI.Common.UnitTests.DeploymentManifestFile
 {
@@ -18,10 +23,8 @@ namespace AWS.Deploy.CLI.Common.UnitTests.DeploymentManifestFile
     {
         private readonly IFileManager _fileManager;
         private readonly IDirectoryManager _directoryManager;
-        private readonly IDirectoryManager _testDirectoryManager;
         private readonly string _targetApplicationFullPath;
         private readonly string _targetApplicationDirectoryFullPath;
-        private readonly IDeploymentManifestEngine _deploymentManifestEngine;
 
         private bool _isDisposed;
 
@@ -29,24 +32,36 @@ namespace AWS.Deploy.CLI.Common.UnitTests.DeploymentManifestFile
         {
             _fileManager = new FileManager();
             _directoryManager = new DirectoryManager();
-            _testDirectoryManager = new TestDirectoryManager();
             var targetApplicationPath = Path.Combine("testapps", "WebAppWithDockerFile", "WebAppWithDockerFile.csproj");
             _targetApplicationFullPath = _directoryManager.GetDirectoryInfo(targetApplicationPath).FullName;
             _targetApplicationDirectoryFullPath = _directoryManager.GetDirectoryInfo(targetApplicationPath).Parent.FullName;
-            _deploymentManifestEngine = new DeploymentManifestEngine(_testDirectoryManager, _fileManager);
+        }
+
+        private async Task<DeploymentManifestEngine> BuildDeploymentManifestEngine()
+        {
+            var parser = new ProjectDefinitionParser(_fileManager, _directoryManager);
+            var awsCredentials = new Mock<AWSCredentials>();
+            var session = new OrchestratorSession(
+                await parser.Parse(_targetApplicationFullPath),
+                awsCredentials.Object,
+                "us-west-2",
+                "123456789012");
+
+            return new DeploymentManifestEngine(_directoryManager, _fileManager, session, _targetApplicationFullPath);
         }
 
         [Fact]
         public async Task UpdateDeploymentManifestFile()
         {
             // Arrange
+            var deploymentManifestEngine = await BuildDeploymentManifestEngine();
             var saveCdkDirectoryFullPath = Path.Combine(_targetApplicationDirectoryFullPath, "DeploymentProjects", "MyCdkApp");
             var saveCdkDirectoryFullPath2 = Path.Combine(_targetApplicationDirectoryFullPath, "DeploymentProjects", "MyCdkApp2");
             var saveCdkDirectoryFullPath3 = Path.Combine(_targetApplicationDirectoryFullPath, "DeploymentProjects", "MyCdkApp3");
 
-            _testDirectoryManager.CreateDirectory(saveCdkDirectoryFullPath);
-            _testDirectoryManager.CreateDirectory(saveCdkDirectoryFullPath2);
-            _testDirectoryManager.CreateDirectory(saveCdkDirectoryFullPath3);
+            _directoryManager.CreateDirectory(saveCdkDirectoryFullPath);
+            _directoryManager.CreateDirectory(saveCdkDirectoryFullPath2);
+            _directoryManager.CreateDirectory(saveCdkDirectoryFullPath3);
 
             var saveCdkDirectoryRelativePath = Path.GetRelativePath(_targetApplicationDirectoryFullPath, saveCdkDirectoryFullPath);
             var saveCdkDirectoryRelativePath2 = Path.GetRelativePath(_targetApplicationDirectoryFullPath, saveCdkDirectoryFullPath2);
@@ -55,7 +70,7 @@ namespace AWS.Deploy.CLI.Common.UnitTests.DeploymentManifestFile
             var deploymentManifestFilePath = Path.Combine(_targetApplicationDirectoryFullPath, "aws-deployments.json");
 
             // Act
-            await _deploymentManifestEngine.UpdateDeploymentManifestFile(saveCdkDirectoryFullPath, _targetApplicationFullPath);
+            await deploymentManifestEngine.UpdateSaveCdkProject(saveCdkDirectoryFullPath);
 
             // Assert
             Assert.True(_fileManager.Exists(deploymentManifestFilePath));
@@ -64,8 +79,8 @@ namespace AWS.Deploy.CLI.Common.UnitTests.DeploymentManifestFile
             deploymentProjectPaths.ShouldContain(saveCdkDirectoryRelativePath);
 
             // Update deployment-manifest file
-            await _deploymentManifestEngine.UpdateDeploymentManifestFile(saveCdkDirectoryFullPath2, _targetApplicationFullPath);
-            await _deploymentManifestEngine.UpdateDeploymentManifestFile(saveCdkDirectoryFullPath3, _targetApplicationFullPath);
+            await deploymentManifestEngine.UpdateSaveCdkProject(saveCdkDirectoryFullPath2);
+            await deploymentManifestEngine.UpdateSaveCdkProject(saveCdkDirectoryFullPath3);
 
             // Assert
             Assert.True(_fileManager.Exists(deploymentManifestFilePath));
@@ -84,22 +99,23 @@ namespace AWS.Deploy.CLI.Common.UnitTests.DeploymentManifestFile
         public async Task GetRecipeDefinitionPaths()
         {
             // Arrange
+            var deploymentManifestEngine = await BuildDeploymentManifestEngine();
             var saveCdkDirectoryFullPath = Path.Combine(_targetApplicationDirectoryFullPath, "DeploymentProjects", "MyCdkApp");
             var saveCdkDirectoryFullPath2 = Path.Combine(_targetApplicationDirectoryFullPath, "DeploymentProjects", "MyCdkApp2");
             var saveCdkDirectoryFullPath3 = Path.Combine(_targetApplicationDirectoryFullPath, "DeploymentProjects", "MyCdkApp3");
 
-            _testDirectoryManager.CreateDirectory(saveCdkDirectoryFullPath);
-            _testDirectoryManager.CreateDirectory(saveCdkDirectoryFullPath2);
-            _testDirectoryManager.CreateDirectory(saveCdkDirectoryFullPath3);
+            _directoryManager.CreateDirectory(saveCdkDirectoryFullPath);
+            _directoryManager.CreateDirectory(saveCdkDirectoryFullPath2);
+            _directoryManager.CreateDirectory(saveCdkDirectoryFullPath3);
 
-            await _deploymentManifestEngine.UpdateDeploymentManifestFile(saveCdkDirectoryFullPath, _targetApplicationFullPath);
-            await _deploymentManifestEngine.UpdateDeploymentManifestFile(saveCdkDirectoryFullPath2, _targetApplicationFullPath);
-            await _deploymentManifestEngine.UpdateDeploymentManifestFile(saveCdkDirectoryFullPath3, _targetApplicationFullPath);
+            await deploymentManifestEngine.UpdateSaveCdkProject(saveCdkDirectoryFullPath);
+            await deploymentManifestEngine.UpdateSaveCdkProject(saveCdkDirectoryFullPath2);
+            await deploymentManifestEngine.UpdateSaveCdkProject(saveCdkDirectoryFullPath3);
 
             var deploymentManifestFilePath = Path.Combine(_targetApplicationDirectoryFullPath, "aws-deployments.json");
 
             // Act
-            var recipeDefinitionPaths = await _deploymentManifestEngine.GetRecipeDefinitionPaths(_targetApplicationFullPath);
+            var recipeDefinitionPaths = await deploymentManifestEngine.GetRecipeDefinitionPaths();
 
             // Assert
             Assert.True(_fileManager.Exists(deploymentManifestFilePath));

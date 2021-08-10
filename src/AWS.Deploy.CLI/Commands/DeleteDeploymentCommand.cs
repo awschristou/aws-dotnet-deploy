@@ -8,7 +8,7 @@ using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using AWS.Deploy.CLI.CloudFormation;
 using AWS.Deploy.Common;
-using AWS.Deploy.Recipes.CDK.Common;
+using AWS.Deploy.Orchestration.DeploymentManifest;
 
 namespace AWS.Deploy.CLI.Commands
 {
@@ -23,13 +23,19 @@ namespace AWS.Deploy.CLI.Commands
         private readonly IToolInteractiveService _interactiveService;
         private readonly IAmazonCloudFormation _cloudFormationClient;
         private readonly IConsoleUtilities _consoleUtilities;
+        private readonly IDeploymentManifestEngine? _deploymentManifestEngine;
 
-        public DeleteDeploymentCommand(IAWSClientFactory awsClientFactory, IToolInteractiveService interactiveService, IConsoleUtilities consoleUtilities)
+        public DeleteDeploymentCommand(
+            IAWSClientFactory awsClientFactory,
+            IToolInteractiveService interactiveService,
+            IConsoleUtilities consoleUtilities,
+            IDeploymentManifestEngine? deploymentManifestEngine)
         {
             _awsClientFactory = awsClientFactory;
             _interactiveService = interactiveService;
             _consoleUtilities = consoleUtilities;
             _cloudFormationClient = _awsClientFactory.GetAWSClient<IAmazonCloudFormation>();
+            _deploymentManifestEngine = deploymentManifestEngine;
         }
 
         /// <summary>
@@ -66,6 +72,10 @@ namespace AWS.Deploy.CLI.Commands
                 var _ = monitor.StartAsync();
 
                 await WaitForStackDelete(stackName);
+
+                if (_deploymentManifestEngine != null)
+                    await _deploymentManifestEngine.DeleteLastDeployedStack(stackName);
+
                 _interactiveService.WriteLine($"{stackName}: deleted");
             }
             catch (AmazonCloudFormationException)

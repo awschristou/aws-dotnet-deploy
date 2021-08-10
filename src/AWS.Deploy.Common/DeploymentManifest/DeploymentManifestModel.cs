@@ -11,11 +11,13 @@ namespace AWS.Deploy.Common.DeploymentManifest
     /// </summary>
     public class DeploymentManifestModel
     {
-        [JsonProperty("deployment-projects")]
-        public List<DeploymentManifestEntry> DeploymentManifestEntries { get; set; }
+        public List<LastDeployedStack>? LastDeployedStacks { get; set; }
 
-        public DeploymentManifestModel(List<DeploymentManifestEntry> deploymentManifestEntries)
+        public List<DeploymentManifestEntry>? DeploymentManifestEntries { get; set; }
+
+        public DeploymentManifestModel(List<LastDeployedStack> lastDeployedStacks, List<DeploymentManifestEntry> deploymentManifestEntries)
         {
+            LastDeployedStacks = lastDeployedStacks;
             DeploymentManifestEntries = deploymentManifestEntries;
         }
     }

@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using AWS.Deploy.Common;
-using AWS.Deploy.Common.DeploymentManifest;
 using AWS.Deploy.Common.IO;
 using AWS.Deploy.Common.Recipes;
 using AWS.Deploy.Orchestration;
+using AWS.Deploy.Orchestration.DeploymentManifest;
 using AWS.Deploy.Orchestration.Utilities;
 using AWS.Deploy.Recipes;
 using Newtonsoft.Json;
@@ -109,7 +109,7 @@ namespace AWS.Deploy.CLI.Commands
             _toolInteractiveService.WriteLine();
             _toolInteractiveService.WriteLine($"The CDK deployment project is saved at: {saveCdkDirectoryFullPath}");
 
-            await _deploymentManifestEngine.UpdateDeploymentManifestFile(saveCdkDirectoryFullPath, _targetApplicationFullPath);
+            await _deploymentManifestEngine.UpdateSaveCdkProject(saveCdkDirectoryFullPath);
         }
 
         /// <summary>

@@ -17,8 +17,8 @@ using AWS.Deploy.Orchestration.Data;
 using AWS.Deploy.Orchestration.Utilities;
 using AWS.Deploy.CLI.Commands.CommandHandlerInput;
 using AWS.Deploy.Common.IO;
-using AWS.Deploy.Common.DeploymentManifest;
 using AWS.Deploy.Orchestration.DisplayedResources;
+using AWS.Deploy.Orchestration.DeploymentManifest;
 
 namespace AWS.Deploy.CLI.Commands
 {
@@ -53,12 +53,11 @@ namespace AWS.Deploy.CLI.Commands
         private readonly ICdkProjectHandler _cdkProjectHandler;
         private readonly IDeploymentBundleHandler _deploymentBundleHandler;
         private readonly ITemplateMetadataReader _templateMetadataReader;
-        private readonly IDeployedApplicationQueryer _deployedApplicationQueryer;
         private readonly ITypeHintCommandFactory _typeHintCommandFactory;
         private readonly IDisplayedResourcesHandler _displayedResourceHandler;
         private readonly IConsoleUtilities _consoleUtilities;
-        private readonly IDeploymentManifestEngine _deploymentManifestEngine;
-        private readonly ICustomRecipeLocator _customRecipeLocator;
+        private readonly IDirectoryManager _directoryManager;
+        private readonly IFileManager _fileManager;
 
         public CommandFactory(
             IToolInteractiveService toolInteractiveService,
@@ -74,12 +73,11 @@ namespace AWS.Deploy.CLI.Commands
             ICdkProjectHandler cdkProjectHandler,
             IDeploymentBundleHandler deploymentBundleHandler,
             ITemplateMetadataReader templateMetadataReader,
-            IDeployedApplicationQueryer deployedApplicationQueryer,
             ITypeHintCommandFactory typeHintCommandFactory,
             IDisplayedResourcesHandler displayedResourceHandler,
             IConsoleUtilities consoleUtilities,
-            IDeploymentManifestEngine deploymentManifestEngine,
-            ICustomRecipeLocator customRecipeLocator)
+            IDirectoryManager directoryManager,
+            IFileManager fileManager)
         {
             _toolInteractiveService = toolInteractiveService;
             _orchestratorInteractiveService = orchestratorInteractiveService;
@@ -94,12 +92,11 @@ namespace AWS.Deploy.CLI.Commands
             _cdkProjectHandler = cdkProjectHandler;
             _deploymentBundleHandler = deploymentBundleHandler;
             _templateMetadataReader = templateMetadataReader;
-            _deployedApplicationQueryer = deployedApplicationQueryer;
             _typeHintCommandFactory = typeHintCommandFactory;
             _displayedResourceHandler = displayedResourceHandler;
             _consoleUtilities = consoleUtilities;
-            _deploymentManifestEngine = deploymentManifestEngine;
-            _customRecipeLocator = customRecipeLocator;
+            _directoryManager = directoryManager;
+            _fileManager = fileManager;
         }
 
         public Command BuildRootCommand()
@@ -171,6 +168,14 @@ namespace AWS.Deploy.CLI.Commands
 
                     var dockerEngine = new DockerEngine.DockerEngine(projectDefinition);
 
+                    var targetApplicationFullPath = _directoryManager.GetDirectoryInfo(projectDefinition.ProjectPath).FullName;
+
+                    var deploymentManifestEngine = new DeploymentManifestEngine(_directoryManager, _fileManager, session, targetApplicationFullPath);
+
+                    var deployedApplicationQueryer = new DeployedApplicationQueryer(_awsResourceQueryer, deploymentManifestEngine, session, _orchestratorInteractiveService);
+
+                    var customRecipeLocator = new CustomRecipeLocator(deploymentManifestEngine, _orchestratorInteractiveService, _commandLineWrapper, _directoryManager);
+
                     var deploy = new DeployCommand(
                         _toolInteractiveService,
                         _orchestratorInteractiveService,
@@ -180,12 +185,13 @@ namespace AWS.Deploy.CLI.Commands
                         dockerEngine,
                         _awsResourceQueryer,
                         _templateMetadataReader,
-                        _deployedApplicationQueryer,
+                        deployedApplicationQueryer,
                         _typeHintCommandFactory,
                         _displayedResourceHandler,
                         _cloudApplicationNameGenerator,
+                        deploymentManifestEngine,
                         _consoleUtilities,
-                        _customRecipeLocator,
+                        customRecipeLocator,
                         session);
 
                     var deploymentProjectPath = input.DeploymentProject ?? string.Empty;
@@ -256,7 +262,26 @@ namespace AWS.Deploy.CLI.Commands
                         return CommandReturnCodes.USER_ERROR;
                     }
 
-                    await new DeleteDeploymentCommand(_awsClientFactory, _toolInteractiveService, _consoleUtilities).ExecuteAsync(input.DeploymentName);
+                    DeploymentManifestEngine? deploymentManifestEngine = null;
+
+                    if (!string.IsNullOrEmpty(input.ProjectPath))
+                    {
+                        var projectDefinition = await _projectParserUtility.Parse(input.ProjectPath ?? "");
+
+                        var callerIdentity = await _awsResourceQueryer.GetCallerIdentity();
+
+                        var session = new OrchestratorSession(
+                        projectDefinition,
+                        awsCredentials,
+                        awsRegion,
+                        callerIdentity.Account);
+
+                        var targetApplicationFullPath = _directoryManager.GetDirectoryInfo(projectDefinition.ProjectPath).FullName;
+
+                        deploymentManifestEngine = new DeploymentManifestEngine(_directoryManager, _fileManager, session, targetApplicationFullPath);
+                    }
+
+                    await new DeleteDeploymentCommand(_awsClientFactory, _toolInteractiveService, _consoleUtilities, deploymentManifestEngine).ExecuteAsync(input.DeploymentName);
 
                     return CommandReturnCodes.SUCCESS;
                 }
@@ -309,7 +334,9 @@ namespace AWS.Deploy.CLI.Commands
                         awsOptions.Region = RegionEndpoint.GetBySystemName(awsRegion);
                     });
 
-                    var listDeploymentsCommand = new ListDeploymentsCommand(_toolInteractiveService, _deployedApplicationQueryer);
+                    var deployedApplicationQueryer = new DeployedApplicationQueryer(_awsResourceQueryer);
+
+                    var listDeploymentsCommand = new ListDeploymentsCommand(_toolInteractiveService, deployedApplicationQueryer);
 
                     await listDeploymentsCommand.ExecuteAsync();
                 }
@@ -359,11 +386,19 @@ namespace AWS.Deploy.CLI.Commands
                 {
                     _toolInteractiveService.Diagnostics = input.Diagnostics;
                     var projectDefinition = await _projectParserUtility.Parse(input.ProjectPath ?? "");
+                    var awsCredentials = await _awsUtilities.ResolveAWSCredentials(input.Profile);
+                    var awsRegion = _awsUtilities.ResolveAWSRegion(input.Region);
 
                     var saveDirectory = input.Output;
                     var projectDisplayName = input.ProjectDisplayName;
 
-                    OrchestratorSession session = new OrchestratorSession(projectDefinition);
+                    var callerIdentity = await _awsResourceQueryer.GetCallerIdentity();
+
+                    var session = new OrchestratorSession(
+                        projectDefinition,
+                        awsCredentials,
+                        awsRegion,
+                        callerIdentity.Account);
 
                     var targetApplicationFullPath = new DirectoryInfo(projectDefinition.ProjectPath).FullName;
 
@@ -373,15 +408,17 @@ namespace AWS.Deploy.CLI.Commands
                         saveDirectory = Path.GetFullPath(saveDirectory, targetApplicationDirectoryFullPath);
                     }
 
+                    var deploymentManifestEngine = new DeploymentManifestEngine(_directoryManager, _fileManager, session, targetApplicationFullPath);
+
                     var generateDeploymentProject = new GenerateDeploymentProjectCommand(
                         _toolInteractiveService,
                         _consoleUtilities,
                         _cdkProjectHandler,
                         _commandLineWrapper,
-                        new DirectoryManager(),
-                        new FileManager(),
+                        _directoryManager,
+                        _fileManager,
                         session,
-                        _deploymentManifestEngine,
+                        deploymentManifestEngine,
                         targetApplicationFullPath);
 
                     await generateDeploymentProject.ExecuteAsync(saveDirectory, projectDisplayName);

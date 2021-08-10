@@ -8,6 +8,8 @@ namespace AWS.Deploy.CLI.Commands.CommandHandlerInput
     /// </summary>
     public class GenerateDeploymentProjectCommandHandlerInput
     {
+        public string? Profile { get; set; }
+        public string? Region { get; set; }
         public string? ProjectPath { get; set; }
         public bool Diagnostics { get; set; }
         public string Output { get; set; } = string.Empty;

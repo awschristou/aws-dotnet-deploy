@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AWS.Deploy.Common.DeploymentManifest;
 using AWS.Deploy.Common.IO;
+using AWS.Deploy.Orchestration.DeploymentManifest;
 using AWS.Deploy.Orchestration.Utilities;
 
 namespace AWS.Deploy.Orchestration
@@ -52,7 +52,7 @@ namespace AWS.Deploy.Orchestration
         {
             var customRecipePaths = new HashSet<string>();
 
-            foreach (var recipePath in await LocateRecipePathsFromManifestFile(targetApplicationFullPath))
+            foreach (var recipePath in await LocateRecipePathsFromManifestFile())
             {
                 if (ContainsRecipeFile(recipePath))
                     customRecipePaths.Add(recipePath);
@@ -72,11 +72,11 @@ namespace AWS.Deploy.Orchestration
         /// </summary>
         /// <param name="targetApplicationFullPath">The absolute path to the target application csproj or fsproj file</param>
         /// <returns>A list containing absolute paths to the saved CDK deployment projects</returns>
-        private async Task<List<string>> LocateRecipePathsFromManifestFile(string targetApplicationFullPath)
+        private async Task<List<string>> LocateRecipePathsFromManifestFile()
         {
             try
             {
-                return await _deploymentManifestEngine.GetRecipeDefinitionPaths(targetApplicationFullPath);
+                return await _deploymentManifestEngine.GetRecipeDefinitionPaths();
             }
             catch
             {

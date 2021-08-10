@@ -5,7 +5,6 @@ using AWS.Deploy.CLI.Commands;
 using AWS.Deploy.CLI.Commands.TypeHints;
 using AWS.Deploy.CLI.Utilities;
 using AWS.Deploy.Common;
-using AWS.Deploy.Common.DeploymentManifest;
 using AWS.Deploy.Common.Extensions;
 using AWS.Deploy.Common.IO;
 using AWS.Deploy.Orchestration;
@@ -52,8 +51,6 @@ namespace AWS.Deploy.CLI.Extensions
             serviceCollection.TryAdd(new ServiceDescriptor(typeof(IDisplayedResourceCommandFactory), typeof(DisplayedResourceCommandFactory), lifetime));
             serviceCollection.TryAdd(new ServiceDescriptor(typeof(IDisplayedResourcesHandler), typeof(DisplayedResourcesHandler), lifetime));
             serviceCollection.TryAdd(new ServiceDescriptor(typeof(IZipFileManager), typeof(ZipFileManager), lifetime));
-            serviceCollection.TryAdd(new ServiceDescriptor(typeof(IDeploymentManifestEngine), typeof(DeploymentManifestEngine), lifetime));
-            serviceCollection.TryAdd(new ServiceDescriptor(typeof(ICustomRecipeLocator), typeof(CustomRecipeLocator), lifetime));
             serviceCollection.TryAdd(new ServiceDescriptor(typeof(ICommandFactory), typeof(CommandFactory), lifetime));
 
             var packageJsonTemplate = typeof(PackageJsonGenerator).Assembly.ReadEmbeddedFile(PackageJsonGenerator.TemplateIdentifier);

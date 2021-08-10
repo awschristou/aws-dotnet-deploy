@@ -165,4 +165,13 @@ namespace AWS.Deploy.Orchestration
     {
         public AWSResourceNotFoundException(string message, Exception? innerException = null) : base(message, innerException) { }
     }
+
+    /// <summary>
+    /// Exception thrown if the Deployment Manifest File is invalid.
+    /// </summary>
+    [AWSDeploymentExpectedException]
+    public class InvalidDeploymentManifestFileException : Exception
+    {
+        public InvalidDeploymentManifestFileException(string message, Exception? innerException = null) : base(message, innerException) { }
+    }
 }

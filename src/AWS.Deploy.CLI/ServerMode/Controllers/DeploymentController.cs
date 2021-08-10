@@ -26,6 +26,8 @@ using Microsoft.AspNetCore.Authorization;
 using Amazon.Runtime;
 using AWS.Deploy.Common.Recipes;
 using AWS.Deploy.Orchestration.DisplayedResources;
+using AWS.Deploy.Orchestration.DeploymentManifest;
+using AWS.Deploy.Common.IO;
 
 namespace AWS.Deploy.CLI.ServerMode.Controllers
 {
@@ -248,7 +250,8 @@ namespace AWS.Deploy.CLI.ServerMode.Controllers
             {
                 output.ExistingDeployments.Add(new ExistingDeploymentSummary(
                     deployment.Name,
-                    deployment.RecipeId));
+                    deployment.RecipeId,
+                    deployment.LastUpdatedTime));
             }
 
             return Ok(output);
@@ -448,15 +451,34 @@ namespace AWS.Deploy.CLI.ServerMode.Controllers
                 state.AWSRegion,
                 state.AWSAccountId);
 
+            var directoryManager = serviceProvider.GetRequiredService<IDirectoryManager>();
+
+            var targetApplicationFullPath = directoryManager.GetDirectoryInfo(state.ProjectDefinition.ProjectPath).FullName;
+
+            var deploymentManifestEngine = new DeploymentManifestEngine(
+                directoryManager,
+                serviceProvider.GetRequiredService<IFileManager>(),
+                session,
+                targetApplicationFullPath);
+
+            var orchestratorInteractiveService = serviceProvider.GetRequiredService<IOrchestratorInteractiveService>();
+
+            var customRecipeLocator = new CustomRecipeLocator(
+                deploymentManifestEngine,
+                orchestratorInteractiveService,
+                serviceProvider.GetRequiredService<ICommandLineWrapper>(),
+                directoryManager);
+
             return new Orchestrator(
                                     session,
-                                    serviceProvider.GetRequiredService<IOrchestratorInteractiveService>(),
+                                    orchestratorInteractiveService,
                                     serviceProvider.GetRequiredService<ICdkProjectHandler>(),
                                     serviceProvider.GetRequiredService<ICDKManager>(),
                                     serviceProvider.GetRequiredService<IAWSResourceQueryer>(),
                                     serviceProvider.GetRequiredService<IDeploymentBundleHandler>(),
+                                    deploymentManifestEngine,
                                     new DockerEngine.DockerEngine(session.ProjectDefinition),
-                                    serviceProvider.GetRequiredService<ICustomRecipeLocator>(),
+                                    customRecipeLocator,
                                     new List<string> { RecipeLocator.FindRecipeDefinitionsPath() }
                                 );
         }

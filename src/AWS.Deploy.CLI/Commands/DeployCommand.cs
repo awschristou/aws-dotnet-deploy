@@ -18,6 +18,7 @@ using AWS.Deploy.Recipes;
 using AWS.Deploy.Orchestration.Data;
 using AWS.Deploy.Orchestration.Utilities;
 using AWS.Deploy.Orchestration.DisplayedResources;
+using AWS.Deploy.Orchestration.DeploymentManifest;
 
 namespace AWS.Deploy.CLI.Commands
 {
@@ -35,6 +36,8 @@ namespace AWS.Deploy.CLI.Commands
         private readonly ITypeHintCommandFactory _typeHintCommandFactory;
         private readonly IDisplayedResourcesHandler _displayedResourcesHandler;
         private readonly ICloudApplicationNameGenerator _cloudApplicationNameGenerator;
+        private readonly IDeploymentManifestEngine _deploymentManifestEngine;
+
         private readonly IConsoleUtilities _consoleUtilities;
         private readonly ICustomRecipeLocator _customRecipeLocator;
 
@@ -53,6 +56,7 @@ namespace AWS.Deploy.CLI.Commands
             ITypeHintCommandFactory typeHintCommandFactory,
             IDisplayedResourcesHandler displayedResourcesHandler,
             ICloudApplicationNameGenerator cloudApplicationNameGenerator,
+            IDeploymentManifestEngine deploymentManifestEngine,
             IConsoleUtilities consoleUtilities,
             ICustomRecipeLocator customRecipeLocator,
             OrchestratorSession session)
@@ -68,6 +72,7 @@ namespace AWS.Deploy.CLI.Commands
             _typeHintCommandFactory = typeHintCommandFactory;
             _displayedResourcesHandler = displayedResourcesHandler;
             _cloudApplicationNameGenerator = cloudApplicationNameGenerator;
+            _deploymentManifestEngine = deploymentManifestEngine;
             _consoleUtilities = consoleUtilities;
             _session = session;
             _cdkManager = cdkManager;
@@ -131,6 +136,7 @@ namespace AWS.Deploy.CLI.Commands
                     _cdkManager,
                     _awsResourceQueryer,
                     _deploymentBundleHandler,
+                    _deploymentManifestEngine,
                     _dockerEngine,
                     _customRecipeLocator,
                     new List<string> { RecipeLocator.FindRecipeDefinitionsPath() });

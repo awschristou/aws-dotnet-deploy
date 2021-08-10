@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using AWS.Deploy.Common;
 using AWS.Deploy.Orchestration.Data;
+using AWS.Deploy.Orchestration.DeploymentManifest;
 using AWS.Deploy.Recipes.CDK.Common;
 
 namespace AWS.Deploy.Orchestration.Utilities
@@ -26,10 +27,25 @@ namespace AWS.Deploy.Orchestration.Utilities
     public class DeployedApplicationQueryer : IDeployedApplicationQueryer
     {
         private readonly IAWSResourceQueryer _awsResourceQueryer;
+        private readonly IDeploymentManifestEngine? _deploymentManifestEngine;
+        private readonly OrchestratorSession? _session;
+        private readonly IOrchestratorInteractiveService? _orchestratorInteractiveService;
 
-        public DeployedApplicationQueryer(IAWSResourceQueryer awsResourceQueryer)
+        public DeployedApplicationQueryer(
+            IAWSResourceQueryer awsResourceQueryer)
         {
             _awsResourceQueryer = awsResourceQueryer;
+        }
+        public DeployedApplicationQueryer(
+           IAWSResourceQueryer awsResourceQueryer,
+           IDeploymentManifestEngine deploymentManifestEngine,
+           OrchestratorSession session,
+           IOrchestratorInteractiveService orchestratorInteractiveService)
+        {
+            _awsResourceQueryer = awsResourceQueryer;
+            _deploymentManifestEngine = deploymentManifestEngine;
+            _session = session;
+            _orchestratorInteractiveService = orchestratorInteractiveService;
         }
 
         public async Task<List<CloudApplication>> GetExistingDeployedApplications(IList<Recommendation>? compatibleRecommendations = null)
@@ -73,7 +89,35 @@ namespace AWS.Deploy.Orchestration.Utilities
                     continue;
                 }
 
-                apps.Add(new CloudApplication(stack.StackName, recipeId));
+                apps.Add(new CloudApplication(stack.StackName, recipeId, stack.LastUpdatedTime));
+            }
+
+            if (_deploymentManifestEngine != null &&
+                _session != null &&
+                _orchestratorInteractiveService != null)
+            {
+                try
+                {
+                    await _deploymentManifestEngine.CleanOrphanStacks(apps.Select(x => x.StackName).ToList());
+                    var deploymentManifest = await _deploymentManifestEngine.GetDeploymentManifest();
+                    var lastDeployedStack = deploymentManifest?.LastDeployedStacks
+                        .FirstOrDefault(x => x.AWSAccountId.Equals(_session.AWSAccountId) && x.AWSRegion.Equals(_session.AWSRegion));
+
+                    return apps.OrderBy(x => {
+                            var index = lastDeployedStack?.Stacks?.IndexOf(x.StackName);
+                            return index != -1 ? index : apps.Count;
+                        })
+                        .ThenByDescending(x => x.LastUpdatedTime)
+                        .ToList();
+                }
+                catch (FailedToUpdateDeploymentManifestFileException ex)
+                {
+                    _orchestratorInteractiveService.LogErrorMessageLine(ex.Message);
+                }
+                catch (InvalidDeploymentManifestFileException ex)
+                {
+                    _orchestratorInteractiveService.LogErrorMessageLine(ex.Message);
+                }
             }
 
             return apps;
