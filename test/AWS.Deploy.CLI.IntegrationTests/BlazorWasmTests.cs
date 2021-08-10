@@ -46,7 +46,7 @@ namespace AWS.Deploy.CLI.IntegrationTests
             Assert.NotNull(_interactiveService);
         }
 
-        [Theory]
+        [Theory(Skip = "hello")]
         [InlineData("testapps", "BlazorWasm31", "BlazorWasm31.csproj")]
         [InlineData("testapps", "BlazorWasm50", "BlazorWasm50.csproj")]
         public async Task DefaultConfigurations(params string[] components)
