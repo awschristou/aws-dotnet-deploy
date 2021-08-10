@@ -29,7 +29,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             _testArtifactsDirectoryPath = Path.Combine(testAppsDirectoryPath, "TestArtifacts");
         }
 
-        [Fact]
+        [Fact(Skip = "")]
         public async Task DefaultSaveDirectory()
         {
             _saveDirectoryPath = _targetApplicationProjectPath + "CDK";
@@ -37,7 +37,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             CleanUp();
         }
 
-        [Fact]
+        [Fact(Skip = "")]
         public async Task CustomSaveDirectory()
         {
             _saveDirectoryPath = Path.Combine(_testArtifactsDirectoryPath, "MyCdkApp");
@@ -45,7 +45,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             CleanUp();
         }
 
-        [Fact]
+        [Fact(Skip = "")]
         public async Task InvalidSaveCdkDirectoryInsideProjectDirectory()
         {
             
@@ -54,7 +54,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             CleanUp();
         }
 
-        [Fact]
+        [Fact(Skip = "")]
         public async Task InvalidNonEmptySaveCdkDirectory()
         {
             Directory.CreateDirectory(Path.Combine(_testArtifactsDirectoryPath, "MyCdkApp", "MyFolder"));

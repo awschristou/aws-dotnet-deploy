@@ -57,7 +57,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.ConfigFileDeployment
             Assert.NotNull(_interactiveService);
         }
 
-        [Fact]
+        [Fact(Skip = "")]
         public async Task PerformDeployment()
         {
             // Deploy
