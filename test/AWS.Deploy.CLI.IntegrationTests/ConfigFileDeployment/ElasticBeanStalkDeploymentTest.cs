@@ -64,8 +64,11 @@ namespace AWS.Deploy.CLI.IntegrationTests.ConfigFileDeployment
             _stackName = userDeploymentSettings.StackName;
 
             var deployArgs = new[] { "deploy", "--project-path", projectPath, "--apply", configFilePath, "--silent" };
-            await _app.Run(deployArgs);
 
+            var startDate = DateTime.Now;
+            var deploymentRun = await _app.Run(deployArgs);
+            _interactiveService.WriteLine($"Stack '{_stackName}' took {DateTime.Now - startDate}s");
+            Assert.Equal(0, deploymentRun);
             // Verify application is deployed and running
             Assert.Equal(StackStatus.CREATE_COMPLETE, await _cloudFormationHelper.GetStackStatus(_stackName));
 

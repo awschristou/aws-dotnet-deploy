@@ -68,7 +68,10 @@ namespace AWS.Deploy.CLI.IntegrationTests
             // Deploy
             var projectPath = _testAppManager.GetProjectPath(Path.Combine("testapps", "WebAppWithDockerFile", "WebAppWithDockerFile.csproj"));
             var deployArgs = new[] { "deploy", "--project-path", projectPath, "--stack-name", _stackName, "--diagnostics" };
-            await _app.Run(deployArgs);
+            var startDate = DateTime.Now;
+            var deploymentRun = await _app.Run(deployArgs);
+            _interactiveService.WriteLine($"Stack '{_stackName}' took {DateTime.Now - startDate}s");
+            Assert.Equal(0, deploymentRun);
 
             // Verify application is deployed and running
             Assert.Equal(StackStatus.CREATE_COMPLETE, await _cloudFormationHelper.GetStackStatus(_stackName));
