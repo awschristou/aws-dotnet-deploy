@@ -51,7 +51,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.ConfigFileDeployment
             _testAppManager = new TestAppManager();
         }
 
-        [Fact (Skip = "hello")]
+        [Fact]
         public async Task PerformDeployment()
         {
             // Deploy

@@ -162,8 +162,6 @@ namespace AWS.Deploy.CLI.Commands
 
             deployCommand.Handler = CommandHandler.Create(async (DeployCommandHandlerInput input) =>
             {
-                try
-                {
                     _toolInteractiveService.Diagnostics = input.Diagnostics;
                     _toolInteractiveService.DisableInteractive = input.Silent;
 
@@ -223,29 +221,6 @@ namespace AWS.Deploy.CLI.Commands
                     await deploy.ExecuteAsync(input.StackName ?? "", deploymentProjectPath, userDeploymentSettings);
 
                     return CommandReturnCodes.SUCCESS;
-                }
-                catch (Exception e) when (e.IsAWSDeploymentExpectedException())
-                {
-                    if (input.Diagnostics)
-                        _toolInteractiveService.WriteErrorLine(e.PrettyPrint());
-                    else
-                    {
-                        _toolInteractiveService.WriteErrorLine(string.Empty);
-                        _toolInteractiveService.WriteErrorLine(e.Message);
-                    }
-
-                    // bail out with an non-zero return code.
-                    return CommandReturnCodes.USER_ERROR;
-                }
-                catch (Exception e)
-                {
-                    // This is a bug
-                    _toolInteractiveService.WriteErrorLine(
-                        "Unhandled exception.  This is a bug.  Please copy the stack trace below and file a bug at https://github.com/aws/aws-dotnet-deploy. " +
-                        e.PrettyPrint());
-
-                    return CommandReturnCodes.UNHANDLED_EXCEPTION;
-                }
             });
             return deployCommand;
         }
