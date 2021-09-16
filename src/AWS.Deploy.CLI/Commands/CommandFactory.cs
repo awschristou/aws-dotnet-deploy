@@ -162,90 +162,66 @@ namespace AWS.Deploy.CLI.Commands
 
             deployCommand.Handler = CommandHandler.Create(async (DeployCommandHandlerInput input) =>
             {
-                try
+                
+                _toolInteractiveService.Diagnostics = input.Diagnostics;
+                _toolInteractiveService.DisableInteractive = input.Silent;
+
+                var userDeploymentSettings = !string.IsNullOrEmpty(input.Apply)
+                    ? UserDeploymentSettings.ReadSettings(input.Apply)
+                    : null;
+
+                var awsCredentials = await _awsUtilities.ResolveAWSCredentials(input.Profile ?? userDeploymentSettings?.AWSProfile);
+                var awsRegion = _awsUtilities.ResolveAWSRegion(input.Region ?? userDeploymentSettings?.AWSRegion);
+
+                _commandLineWrapper.RegisterAWSContext(awsCredentials, awsRegion);
+                _awsClientFactory.RegisterAWSContext(awsCredentials, awsRegion);
+
+                var projectDefinition = await _projectParserUtility.Parse(input.ProjectPath ?? "");
+
+                var callerIdentity = await _awsResourceQueryer.GetCallerIdentity();
+
+                var session = new OrchestratorSession(
+                    projectDefinition,
+                    awsCredentials,
+                    awsRegion,
+                    callerIdentity.Account)
                 {
-                    _toolInteractiveService.Diagnostics = input.Diagnostics;
-                    _toolInteractiveService.DisableInteractive = input.Silent;
+                    AWSProfileName = input.Profile ?? userDeploymentSettings?.AWSProfile ?? null
+                };
 
-                    var userDeploymentSettings = !string.IsNullOrEmpty(input.Apply)
-                        ? UserDeploymentSettings.ReadSettings(input.Apply)
-                        : null;
+                var dockerEngine = new DockerEngine.DockerEngine(projectDefinition, _fileManager);
 
-                    var awsCredentials = await _awsUtilities.ResolveAWSCredentials(input.Profile ?? userDeploymentSettings?.AWSProfile);
-                    var awsRegion = _awsUtilities.ResolveAWSRegion(input.Region ?? userDeploymentSettings?.AWSRegion);
+                var deploy = new DeployCommand(
+                    _toolInteractiveService,
+                    _orchestratorInteractiveService,
+                    _cdkProjectHandler,
+                    _cdkManager,
+                    _cdkVersionDetector,
+                    _deploymentBundleHandler,
+                    dockerEngine,
+                    _awsResourceQueryer,
+                    _templateMetadataReader,
+                    _deployedApplicationQueryer,
+                    _typeHintCommandFactory,
+                    _displayedResourceHandler,
+                    _cloudApplicationNameGenerator,
+                    _localUserSettingsEngine,
+                    _consoleUtilities,
+                    _customRecipeLocator,
+                    _systemCapabilityEvaluator,
+                    session,
+                    _directoryManager);
 
-                    _commandLineWrapper.RegisterAWSContext(awsCredentials, awsRegion);
-                    _awsClientFactory.RegisterAWSContext(awsCredentials, awsRegion);
-
-                    var projectDefinition = await _projectParserUtility.Parse(input.ProjectPath ?? "");
-
-                    var callerIdentity = await _awsResourceQueryer.GetCallerIdentity();
-
-                    var session = new OrchestratorSession(
-                        projectDefinition,
-                        awsCredentials,
-                        awsRegion,
-                        callerIdentity.Account)
-                    {
-                        AWSProfileName = input.Profile ?? userDeploymentSettings?.AWSProfile ?? null
-                    };
-
-                    var dockerEngine = new DockerEngine.DockerEngine(projectDefinition, _fileManager);
-
-                    var deploy = new DeployCommand(
-                        _toolInteractiveService,
-                        _orchestratorInteractiveService,
-                        _cdkProjectHandler,
-                        _cdkManager,
-                        _cdkVersionDetector,
-                        _deploymentBundleHandler,
-                        dockerEngine,
-                        _awsResourceQueryer,
-                        _templateMetadataReader,
-                        _deployedApplicationQueryer,
-                        _typeHintCommandFactory,
-                        _displayedResourceHandler,
-                        _cloudApplicationNameGenerator,
-                        _localUserSettingsEngine,
-                        _consoleUtilities,
-                        _customRecipeLocator,
-                        _systemCapabilityEvaluator,
-                        session,
-                        _directoryManager);
-
-                    var deploymentProjectPath = input.DeploymentProject ?? string.Empty;
-                    if (!string.IsNullOrEmpty(deploymentProjectPath))
-                    {
-                        var targetApplicationDirectoryPath = new DirectoryInfo(projectDefinition.ProjectPath).Parent!.FullName;
-                        deploymentProjectPath = Path.GetFullPath(deploymentProjectPath, targetApplicationDirectoryPath);
-                    }
-
-                    await deploy.ExecuteAsync(input.StackName ?? "", deploymentProjectPath, userDeploymentSettings);
-
-                    return CommandReturnCodes.SUCCESS;
-                }
-                catch (Exception e) when (e.IsAWSDeploymentExpectedException())
+                var deploymentProjectPath = input.DeploymentProject ?? string.Empty;
+                if (!string.IsNullOrEmpty(deploymentProjectPath))
                 {
-                    if (input.Diagnostics)
-                        _toolInteractiveService.WriteErrorLine(e.PrettyPrint());
-                    else
-                    {
-                        _toolInteractiveService.WriteErrorLine(string.Empty);
-                        _toolInteractiveService.WriteErrorLine(e.Message);
-                    }
-
-                    // bail out with an non-zero return code.
-                    return CommandReturnCodes.USER_ERROR;
+                    var targetApplicationDirectoryPath = new DirectoryInfo(projectDefinition.ProjectPath).Parent!.FullName;
+                    deploymentProjectPath = Path.GetFullPath(deploymentProjectPath, targetApplicationDirectoryPath);
                 }
-                catch (Exception e)
-                {
-                    // This is a bug
-                    _toolInteractiveService.WriteErrorLine(
-                        "Unhandled exception.  This is a bug.  Please copy the stack trace below and file a bug at https://github.com/aws/aws-dotnet-deploy. " +
-                        e.PrettyPrint());
 
-                    return CommandReturnCodes.UNHANDLED_EXCEPTION;
-                }
+                await deploy.ExecuteAsync(input.StackName ?? "", deploymentProjectPath, userDeploymentSettings);
+
+                return CommandReturnCodes.SUCCESS;
             });
             return deployCommand;
         }

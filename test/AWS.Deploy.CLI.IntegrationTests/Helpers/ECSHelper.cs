@@ -26,15 +26,28 @@ namespace AWS.Deploy.CLI.IntegrationTests.Helpers
 
         public async Task<Cluster> GetCluster(string clusterName)
         {
-            var request = new DescribeClustersRequest
+            var listRequest = new ListClustersRequest();
+            var listResponse = await _client.ListClustersAsync(listRequest);
+            var targetClusterArn = string.Empty;
+
+            foreach (var clusterArn in listResponse.ClusterArns)
+            {
+                if (clusterArn.Contains(clusterName))
+                {
+                    targetClusterArn = clusterArn;
+                    break;
+                }
+            }
+
+            var describeRequest = new DescribeClustersRequest
             {
                 Clusters = new List<string>
                 {
-                    clusterName
+                    targetClusterArn
                 }
             };
-            var response = await _client.DescribeClustersAsync(request);
-            return response.Clusters.First();
+            var describeResponse = await _client.DescribeClustersAsync(describeRequest);
+            return describeResponse.Clusters.First();
         }
 
         private async Task<string> GetTaskDefinition(string clusterName)

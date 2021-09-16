@@ -20,6 +20,8 @@ namespace AWS.Deploy.Orchestration
         public string? AWSRegion { get; set; }
         public string? AWSAccountId { get; set; }
 
+        public string? StackName { get; set; }
+
         public OrchestratorSession(
             ProjectDefinition projectDefinition,
             AWSCredentials awsCredentials,

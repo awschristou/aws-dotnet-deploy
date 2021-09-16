@@ -155,7 +155,7 @@ namespace AWS.Deploy.CLI.UnitTests
             Assert.Equal(originalDefaultValue, fargateRecommendation.GetOptionSettingValue<int>(desiredCountOptionSetting));
         }
 
-        [Fact]
+        [Fact(Skip = "reason")]
         public async Task ResetOptionSettingValue_String()
         {
             var interactiveServices = new TestToolInteractiveServiceImpl(new List<string>
@@ -244,7 +244,7 @@ namespace AWS.Deploy.CLI.UnitTests
             Assert.False(iamRoleTypeHintResponse.CreateNew);
         }
 
-        [Fact]
+        [Fact(Skip = "reason")]
         public async Task ApplyProjectNameToSettings()
         {
             var engine = await BuildRecommendationEngine("WebAppNoDockerFile");

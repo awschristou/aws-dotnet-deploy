@@ -162,6 +162,10 @@ namespace AWS.Deploy.CLI.Commands
 
             // Get Cloudformation stack name.
             var cloudApplicationName = GetCloudApplicationName(stackName, userDeploymentSettings, compatibleApplications);
+            _session.StackName = cloudApplicationName;
+            // TODO
+            recommendations = await GenerateDeploymentRecommendations(orchestrator, deploymentProjectPath);
+
 
             // Find existing application with the same CloudFormation stack name.
             var deployedApplication = allDeployedApplications.FirstOrDefault(x => string.Equals(x.Name, cloudApplicationName));

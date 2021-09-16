@@ -26,6 +26,7 @@ namespace AWS.Deploy.Orchestration
     public class Orchestrator
     {
         private const string REPLACE_TOKEN_LATEST_DOTNET_BEANSTALK_PLATFORM_ARN = "{LatestDotnetBeanstalkPlatformArn}";
+        private const string REPLACE_TOKEN_STACK_NAME = "{StackName}";
 
         private readonly ICdkProjectHandler? _cdkProjectHandler;
         private readonly ICDKManager? _cdkManager;
@@ -122,10 +123,14 @@ namespace AWS.Deploy.Orchestration
 
             if (_awsResourceQueryer == null)
                 throw new InvalidOperationException($"{nameof(_awsResourceQueryer)} is null as part of the Orchestrator object");
+            if (_session == null)
+                throw new InvalidOperationException($"{nameof(_session)} is null as part of the Orchestrator object");
+            if (!string.IsNullOrEmpty(_session.StackName))
+                replacements[REPLACE_TOKEN_STACK_NAME] = _session.StackName;
 
             var latestPlatform = await _awsResourceQueryer.GetLatestElasticBeanstalkPlatformArn();
             replacements[REPLACE_TOKEN_LATEST_DOTNET_BEANSTALK_PLATFORM_ARN] = latestPlatform.PlatformArn;
-
+            
             return replacements;
         }
 
