@@ -34,7 +34,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             _commandLineWrapper = new CommandLineWrapper(new ConsoleOrchestratorLogger(new ConsoleInteractiveServiceImpl()));
         }
 
-        [Fact]
+        [Fact (Skip = "hello")]
         public async Task GenerateRecommendationsWithoutCustomRecipes()
         {
             // ARRANGE
@@ -53,7 +53,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             recommendations[2].Name.ShouldEqual("ASP.NET Core App to AWS Elastic Beanstalk on Linux"); // default recipe
         }
 
-        [Fact]
+        [Fact (Skip = "hello")]
         public async Task GenerateRecommendationsFromCustomRecipesWithManifestFile()
         {
             // ARRANGE
@@ -100,7 +100,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             File.Exists(Path.Combine(webAppWithDockerFilePath, "aws-deployments.json")).ShouldBeTrue();
         }
 
-        [Fact]
+        [Fact (Skip = "hello")]
         public async Task GenerateRecommendationsFromCustomRecipesWithoutManifestFile()
         {
             // ARRANGE
@@ -147,7 +147,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             File.Exists(Path.Combine(webAppNoDockerFilePath, "aws-deployments.json")).ShouldBeFalse();
         }
 
-        [Fact]
+        [Fact (Skip = "hello")]
         public async Task GenerateRecommendationsFromCompatibleDeploymentProject()
         {
             // ARRANGE
@@ -175,7 +175,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             recommendations[0].Recipe.RecipePath.ShouldEqual(Path.Combine(saveDirectoryPathEcsProject, "ECS-CDK.recipe"));
         }
 
-        [Fact]
+        [Fact (Skip = "hello")]
         public async Task GenerateRecommendationsFromIncompatibleDeploymentProject()
         {
             // ARRANGE
