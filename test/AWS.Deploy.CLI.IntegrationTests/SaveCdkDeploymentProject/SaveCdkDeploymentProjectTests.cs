@@ -21,7 +21,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             _commandLineWrapper = new CommandLineWrapper(new ConsoleOrchestratorLogger(new ConsoleInteractiveServiceImpl()));
         }
 
-        [Fact (Skip = "hello")]
+        [Fact]
         public async Task DefaultSaveDirectory()
         {
             var tempDirectoryPath = new TestAppManager().GetProjectPath(string.Empty);
@@ -38,7 +38,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             Assert.Equal("ecs-tasks.amazonaws.com", applicationIAMRoleSetting.TypeHintData["ServicePrincipal"]);
         }
 
-        [Fact (Skip = "hello")]
+        [Fact]
         public async Task CustomSaveDirectory()
         {
             var tempDirectoryPath = new TestAppManager().GetProjectPath(string.Empty);
@@ -49,7 +49,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             await Utilities.CreateCDKDeploymentProject(targetApplicationProjectPath, saveDirectoryPath);
         }
 
-        [Fact (Skip = "hello")]
+        [Fact]
         public async Task InvalidSaveCdkDirectoryInsideProjectDirectory()
         {
             var tempDirectoryPath = new TestAppManager().GetProjectPath(string.Empty);
@@ -60,7 +60,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             await Utilities.CreateCDKDeploymentProject(targetApplicationProjectPath, saveDirectoryPath, false);
         }
 
-        [Fact (Skip = "hello")]
+        [Fact]
         public async Task InvalidNonEmptySaveCdkDirectory()
         {
             var tempDirectoryPath = new TestAppManager().GetProjectPath(string.Empty);

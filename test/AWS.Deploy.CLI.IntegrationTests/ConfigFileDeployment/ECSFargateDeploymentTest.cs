@@ -14,6 +14,7 @@ using AWS.Deploy.CLI.IntegrationTests.Helpers;
 using AWS.Deploy.CLI.IntegrationTests.Services;
 using AWS.Deploy.Common;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Xunit;
 using Task = System.Threading.Tasks.Task;
 
@@ -69,7 +70,12 @@ namespace AWS.Deploy.CLI.IntegrationTests.ConfigFileDeployment
 
             _stackName = userDeploymentSettings.StackName;
             _clusterName = userDeploymentSettings.LeafOptionSettingItems["ECSCluster.NewClusterName"];
-
+            _interactiveService.WriteLine($"brooo {nameof(_stackName)} {_stackName}");
+            _interactiveService.WriteLine($"brooo {nameof(_clusterName)} {_clusterName}");
+            _interactiveService.WriteLine($"brooo {nameof(configFilePath)} {configFilePath}");
+            _interactiveService.WriteLine($"brooo {nameof(projectPath)} {projectPath}");
+            _interactiveService.WriteLine($"brooo configFile {File.ReadAllText(configFilePath)}");
+            _interactiveService.WriteLine($"brooo configFileSerialized {JsonConvert.SerializeObject(userDeploymentSettings)}");
             var deployArgs = new[] { "deploy", "--project-path", projectPath, "--apply", configFilePath, "--silent" };
             await _app.Run(deployArgs);
 

@@ -61,7 +61,7 @@ namespace AWS.Deploy.CLI.IntegrationTests
             return Task.FromResult<AWSCredentials>(testCredentials);
         }
 
-        [Fact (Skip = "hello")]
+        [Fact]
         public async Task GetRecommendations()
         {
             var projectPath = _testAppManager.GetProjectPath(Path.Combine("testapps", "WebAppNoDockerFile", "WebAppNoDockerFile.csproj"));
@@ -96,7 +96,7 @@ namespace AWS.Deploy.CLI.IntegrationTests
             }
         }
 
-        [Fact (Skip = "hello")]
+        [Fact]
         public async Task GetRecommendationsWithEncryptedCredentials()
         {
             var projectPath = _testAppManager.GetProjectPath(Path.Combine("testapps", "WebAppNoDockerFile", "WebAppNoDockerFile.csproj"));
@@ -151,7 +151,7 @@ namespace AWS.Deploy.CLI.IntegrationTests
             }
         }
 
-        [Fact (Skip = "hello")]
+        [Fact]
         public async Task WebFargateDeploymentNoConfigChanges()
         {
             _stackName = $"ServerModeWebFargate{Guid.NewGuid().ToString().Split('-').Last()}";
