@@ -55,7 +55,7 @@ namespace AWS.Deploy.CLI.IntegrationTests
             _testAppManager = new TestAppManager();
         }
 
-        [Fact]
+        [Fact (Skip = "hello")]
         public async Task DefaultConfigurations()
         {
             _stackName = $"WebAppWithDockerFile{Guid.NewGuid().ToString().Split('-').Last()}";
@@ -125,7 +125,7 @@ namespace AWS.Deploy.CLI.IntegrationTests
             Assert.True(await _cloudFormationHelper.IsStackDeleted(_stackName), $"{_stackName} still exists.");
         }
 
-        [Fact]
+        [Fact (Skip = "hello")]
         public async Task AppRunnerDeployment()
         {
             _stackName = $"WebAppWithDockerFile{Guid.NewGuid().ToString().Split('-').Last()}";

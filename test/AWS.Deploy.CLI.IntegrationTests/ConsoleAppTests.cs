@@ -56,7 +56,7 @@ namespace AWS.Deploy.CLI.IntegrationTests
             _testAppManager = new TestAppManager();
         }
 
-        [Theory]
+        [Theory (Skip = "hello")]
         //[InlineData("testapps", "ConsoleAppService", "ConsoleAppService.csproj")]
         [InlineData("testapps", "ConsoleAppTask", "ConsoleAppTask.csproj")]
         public async Task DefaultConfigurations(params string[] components)

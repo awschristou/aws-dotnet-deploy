@@ -22,7 +22,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             _commandLineWrapper = new CommandLineWrapper(new ConsoleOrchestratorLogger(new ConsoleInteractiveServiceImpl()));
         }
 
-        [Fact]
+        [Fact (Skip = "hello")]
         public async Task LocateCustomRecipePathsWithManifestFile()
         {
             var tempDirectoryPath = new TestAppManager().GetProjectPath(string.Empty);
@@ -46,7 +46,7 @@ namespace AWS.Deploy.CLI.IntegrationTests.SaveCdkDeploymentProject
             customRecipePaths.ShouldContain(Path.Combine(tempDirectoryPath, "MyCdkApp1"));
         }
 
-        [Fact]
+        [Fact (Skip = "hello")]
         public async Task LocateCustomRecipePathsWithoutManifestFile()
         {
             var tempDirectoryPath = new TestAppManager().GetProjectPath(string.Empty);
