@@ -284,6 +284,7 @@ namespace AWS.Deploy.CLI.ServerMode.Controllers
 
                 state.ApplicationDetails.Name = input.NewDeploymentName;
                 state.ApplicationDetails.RecipeId = input.NewDeploymentRecipeId;
+                state.SelectedRecommendation.AddReplacementToken("{StackName}", input.NewDeploymentName);
             }
             else if(!string.IsNullOrEmpty(input.ExistingDeploymentName))
             {
@@ -307,6 +308,7 @@ namespace AWS.Deploy.CLI.ServerMode.Controllers
 
                 state.ApplicationDetails.Name = input.ExistingDeploymentName;
                 state.ApplicationDetails.RecipeId = existingDeployment.RecipeId;
+                state.SelectedRecommendation.AddReplacementToken("{StackName}", input.ExistingDeploymentName);
             }
 
             return Ok();

@@ -73,6 +73,11 @@ namespace AWS.Deploy.Common
             return recommendation;
         }
 
+        public void AddReplacementToken(string key, string value)
+        {
+            _replacementTokens[key] = value;
+        }
+
         private void ApplyPreviousSettings(Recommendation recommendation, IDictionary<string, object> previousSettings)
         {
             recommendation.IsExistingCloudApplication = true;

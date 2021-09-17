@@ -162,9 +162,9 @@ namespace AWS.Deploy.CLI.Commands
 
             // Get Cloudformation stack name.
             var cloudApplicationName = GetCloudApplicationName(stackName, userDeploymentSettings, compatibleApplications);
-            _session.StackName = cloudApplicationName;
+            //_session.StackName = cloudApplicationName
             // TODO
-            recommendations = await GenerateDeploymentRecommendations(orchestrator, deploymentProjectPath);
+            //recommendations = await GenerateDeploymentRecommendations(orchestrator, deploymentProjectPath);
 
 
             // Find existing application with the same CloudFormation stack name.
@@ -194,6 +194,8 @@ namespace AWS.Deploy.CLI.Commands
                     selectedRecommendation = GetSelectedRecommendation(userDeploymentSettings, recommendations);
                 }
             }
+
+            selectedRecommendation.AddReplacementToken("{StackName}", cloudApplicationName);
 
             var cloudApplication = new CloudApplication(cloudApplicationName, selectedRecommendation.Recipe.Id);
 
